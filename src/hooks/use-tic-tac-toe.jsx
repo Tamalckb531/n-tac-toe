@@ -1,47 +1,25 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-const initialBoard = () => Array(9).fill(null);
 
 const useTicTacToe = () => {
-    const [board, setBoard] = useState(initialBoard());
-
+    const [tiles, setTiles] = useState(3);
+    const initialBoard = () => Array(tiles * tiles).fill(null);
+    const [board, setBoard] = useState([]);
     const [isXNext, setIsXNext] = useState(true);
 
-    const WINNING_PATTERNS = [
-        [0, 1, 2],
-        [3, 4, 5],
-        [6, 7, 8],
-        [0, 3, 6],
-        [1, 4, 7],
-        [2, 5, 8],
-        [0, 4, 8],
-        [2, 4, 6],
-    ];
-
-    // const calculateWinner = (currentBoard) => {
-    //     for (let i = 0; i < WINNING_PATTERNS.length; i++) {
-    //         const [a, b, c] = WINNING_PATTERNS[i];
-
-    //         if (currentBoard[a] &&
-    //             currentBoard[a] === currentBoard[b] &&
-    //             currentBoard[a] === currentBoard[c]
-    //         ) {
-    //             return currentBoard[a];
-    //         }
-    //     }
-
-
-    //     return null;
-    // }
+    useEffect(() => {
+        setBoard(Array(tiles * tiles).fill(null));
+    }, [tiles]);
 
     const calculateWinner = (currentBoard) => {
 
-        const len = 3;
+        const len = tiles;
 
         //? Row check
         for (let row = 1; row <= len; row++) {
             let firstIndex = (len * row) - len;
             const element = currentBoard[firstIndex]; //? first element of the row
+            if (element === null) continue; // Skip rows with no valid player
             let allMatch = true;
             for (let col = len - 1; col > 0; col--) {
                 const index = (len * row) - col;
@@ -57,6 +35,7 @@ const useTicTacToe = () => {
         for (let col = len; col > 0; col--) {
             let firstIndex = (len * 1) - col;
             const element = currentBoard[firstIndex];
+            if (element === null) continue; // Skip rows with no valid player
             let allMatch = true;
             for (let row = 2; row <= len; row++) {
                 const index = (len * row) - col;
@@ -69,14 +48,33 @@ const useTicTacToe = () => {
             if (allMatch) return element;
         }
 
-        //? Diagonal check
-        const firstElement = currentBoard[0];
-        for (let i = 2, j = len - 1; i <= len && j > 0; i++, j--) {
-            let index = (len * i) - j;
-            if (currentBoard[index] != firstElement) {
-                break;
+
+        //? Principle Diagonal check
+        let firstElement = currentBoard[0];
+        if (firstElement !== null) {
+            let allMatch = true;
+            for (let i = 2, j = len - 1; i <= len && j > 0; i++, j--) {
+                let index = (len * i) - j;
+                if (currentBoard[index] != firstElement) {
+                    allMatch = false;
+                    break;
+                }
             }
-            return firstElement;
+            if (allMatch) return firstElement;
+        }
+
+        //? Secondary Diagonal check
+        firstElement = currentBoard[(len * 1) - 1];
+        if (firstElement !== null) {
+            let allMatch = true;
+            for (let i = 2; i <= len; i++) {
+                let index = (len * i) - i;
+                if (currentBoard[index] != firstElement) {
+                    allMatch = false;
+                    break;
+                }
+            }
+            if (allMatch) return firstElement;
         }
 
         return null;
@@ -105,7 +103,12 @@ const useTicTacToe = () => {
         setIsXNext(true);
     }
 
-    return { board, handleClick, getStatusMsg, resetGame };
+    const totalTiles = (value) => {
+        setTiles(value);
+        resetGame();
+    }
+
+    return { board, handleClick, getStatusMsg, resetGame, totalTiles };
 }
 
 export default useTicTacToe;
